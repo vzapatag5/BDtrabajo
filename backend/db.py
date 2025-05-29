@@ -12,8 +12,8 @@ class Database:
             self.connection = pymysql.connect(
                 host="localhost",
                 user="root",
-                port=3306,
-                password="",
+                port=3307,
+                password="Fito123",
                 database="sistema_nodo",
                 cursorclass=DictCursor,
                 autocommit=False
