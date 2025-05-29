@@ -78,7 +78,10 @@ class AdminOperations:
                     cat.nombre AS nombre_categoria,
                     c.fecha_inicio,
                     c.fecha_fin,
-                    c.precio
+                    c.precio,
+                    c.url_contenido,  # Añadido
+                    c.periodo,        # Añadido
+                    c.año             # Añadido
                 FROM curso c
                 JOIN profesor p ON c.id_profesor = p.id_profesor
                 JOIN categoria cat ON c.id_categoria = cat.id_categoria
@@ -190,5 +193,16 @@ class AdminOperations:
             print(f"Error en BD: {str(e)}")
             self.db.execute_query("ROLLBACK;")
             return False
+        finally:
+            self.db.close()
+            
+    def obtener_profesor(self, id_profesor):
+        try:
+            return self.db.execute_query("""
+                SELECT id_profesor, nombre, email, genero, 
+                       area_principal, area_alternativa
+                FROM profesor
+                WHERE id_profesor = %s
+            """, (id_profesor,))
         finally:
             self.db.close()
