@@ -30,7 +30,227 @@ class AdminUI:
                 break
             else:
                 print("Opción no válida")
+                
+    def _gestion_cursos(self):
+        while True:
+            print("\n=== GESTIÓN DE CURSOS ===")
+            print("1. Listar cursos")
+            print("2. Agregar curso")
+            print("3. Asignar estudiantes a curso")
+            print("4. Ver estudiantes por curso")
+            print("5. Volver")
+            
+            opcion = input("\nSeleccione una opción: ")
+            
+            if opcion == "1":
+                self._listar_cursos()
+            elif opcion == "2":
+                self._agregar_curso()
+            elif opcion == "3":
+                self._asignar_estudiantes_curso()
+            elif opcion == "4":
+                self._ver_estudiantes_curso()
+            elif opcion == "5":
+                break
+            else:
+                print("Opción no válida")
+                
+    def _listar_cursos(self):
+        cursos = self.operations.listar_cursos()
+        if cursos:
+            print("\n=== LISTADO DE CURSOS ===")
+            print(tabulate(
+                [(c['id_curso'], c['nombre_curso'], c['profesor'], 
+                c['categoria'], c['fecha_inicio'], c['fecha_fin'], 
+                f"${c['precio']:,}") 
+                for c in cursos],
+                headers=['ID', 'Nombre', 'Profesor', 'Categoría', 'Inicio', 'Fin', 'Precio'],
+                tablefmt='grid'
+            ))
+        else:
+            print("No hay cursos registrados")
 
+    def _asignar_estudiantes_curso(self):
+        print("\n=== ASIGNAR ESTUDIANTES A CURSO ===")
+        
+        try:
+            # Usar el método correcto para listar cursos
+            cursos = self.operations.listar_cursos()  # Método existente
+            if not cursos:
+                print("No hay cursos registrados")
+                return
+                
+            print("\nCursos disponibles:")
+            print(tabulate(
+                [(c['id_curso'], c['nombre']) for c in cursos],
+                headers=['ID', 'Nombre del Curso'],
+                tablefmt='grid'
+            ))
+            
+            id_curso = int(input("\nID del curso para asignar estudiantes: "))
+            
+            # Verificar que el curso existe
+            if not any(c['id_curso'] == id_curso for c in cursos):
+                print("❌ El ID del curso no existe")
+                return
+                
+            # Listar estudiantes no matriculados
+            estudiantes = self.operations.listar_estudiantes_no_matriculados(id_curso)
+            if not estudiantes:
+                print("Todos los estudiantes ya están matriculados en este curso")
+                return
+                
+            print("\nEstudiantes disponibles para asignar:")
+            print(tabulate(
+                [(e['id_estudiante'], e['nombre']) for e in estudiantes],
+                headers=['ID', 'Nombre'],
+                tablefmt='grid'
+            ))
+            
+            id_estudiante = int(input("\nID del estudiante a asignar: "))
+            
+            if self.operations.asignar_estudiante_curso(id_estudiante, id_curso):
+                print("✅ Estudiante asignado correctamente al curso")
+            else:
+                print("❌ Error al asignar el estudiante al curso")
+                
+        except ValueError:
+            print("❌ Error: Debe ingresar un número válido para los IDs")
+        except Exception as e:
+            print(f"❌ Error inesperado: {str(e)}")
+        finally:
+            input("Presione Enter para continuar...")
+
+    def _ver_estudiantes_curso(self):
+        print("\n=== ESTUDIANTES POR CURSO ===")
+        
+        cursos = self.operations.listar_cursos()
+        if not cursos:
+            print("No hay cursos registrados")
+            return
+            
+        print("\nCursos disponibles:")
+        print(tabulate(
+            [(c['id_curso'], c['nombre']) for c in cursos],
+            headers=['ID', 'Nombre del Curso'],
+            tablefmt='grid'
+        ))
+        
+        try:
+            id_curso = int(input("\nID del curso para ver estudiantes: "))
+            estudiantes = self.operations.listar_estudiantes_curso(id_curso)
+            
+            if estudiantes:
+                print("\nEstudiantes matriculados:")
+                print(tabulate(
+                    [(e['id_estudiante'], e['nombre'], e['email']) for e in estudiantes],
+                    headers=['ID', 'Nombre', 'Email'],
+                    tablefmt='grid'
+                ))
+            else:
+                print("No hay estudiantes matriculados en este curso")
+                
+        except ValueError:
+            print("❌ El ID del curso debe ser un número")
+        except Exception as e:
+            print(f"❌ Error inesperado: {str(e)}")
+            
+    def _agregar_curso(self):
+        print("\n=== NUEVO CURSO ===")
+        
+        try:
+            # Mostrar profesores disponibles (usando operations en lugar de db)
+            profesores = self.operations.listar_profesores()
+            if not profesores:
+                print("No hay profesores registrados. Debe registrar profesores primero.")
+                return
+            
+            print("\nProfesores disponibles:")
+            print(tabulate(
+                [(p['id_profesor'], p['nombre'], 
+                p.get('area_principal', 'N/A'),  # Usamos .get() para manejar campos faltantes
+                p.get('email', '')) 
+                for p in profesores],
+                headers=['ID', 'Nombre', 'Área Principal', 'Email'],
+                tablefmt='grid'
+            ))
+            
+            # Mostrar categorías disponibles (también usando operations)
+            categorias = self.operations.listar_categorias()
+            if not categorias:
+                print("No hay categorías registradas. Debe registrar categorías primero.")
+                return
+            
+            print("\nCategorías disponibles:")
+            print(tabulate(
+                [(c['id_categoria'], c['nombre']) for c in categorias],
+                headers=['ID', 'Nombre'],
+                tablefmt='grid'
+            ))
+            
+            # Resto del código para recolectar datos del curso...
+            datos = {
+                'id_profesor': int(input("\nID del profesor: ")),
+                'nombre': input("Nombre del curso: ").strip(),
+                'id_categoria': int(input("ID de categoría: ")),
+                'url_contenido': input("URL de contenido: ").strip(),
+                'periodo': self._validar_periodo(),
+                'precio': float(input("Precio: ")),
+                'año': int(input("Año: ")),
+                'fecha_inicio': self._validar_fecha("Fecha inicio (YYYY-MM-DD): "),
+                'fecha_fin': self._validar_fecha("Fecha fin (YYYY-MM-DD): ")
+            }
+            
+            # Validar que el profesor existe
+            if not any(p['id_profesor'] == datos['id_profesor'] for p in profesores):
+                print("❌ El ID del profesor no existe")
+                return
+                
+            # Validar que la categoría existe
+            if not any(c['id_categoria'] == datos['id_categoria'] for c in categorias):
+                print("❌ El ID de categoría no existe")
+                return
+                
+            if self.operations.insertar_curso(**datos):
+                print("✅ Curso registrado exitosamente")
+                # Mostrar el curso recién creado
+                nuevos_cursos = self.operations.listar_cursos()
+                if nuevos_cursos:
+                    print("\nCurso creado:")
+                    print(tabulate(
+                        [(c['id_curso'], c['nombre_curso']) for c in nuevos_cursos[:1]],
+                        headers=['ID', 'Nombre'],
+                        tablefmt='grid'
+                    ))
+            else:
+                print("❌ Error al registrar el curso")
+                
+        except ValueError as e:
+            print(f"❌ Error en los datos ingresados: {str(e)}")
+        except Exception as e:
+            print(f"❌ Error inesperado: {str(e)}")
+            
+            
+    def _validar_periodo(self):
+        while True:
+            periodo = input("Periodo (1/2): ")
+            if periodo in ['1', '2']:
+                return int(periodo)
+            print("❌ Error: El período debe ser 1 o 2")
+
+    def _validar_fecha(self, mensaje):
+        while True:
+            fecha = input(mensaje)
+            try:
+                # Validación básica de formato de fecha
+                if len(fecha) == 10 and fecha[4] == '-' and fecha[7] == '-':
+                    year, month, day = map(int, fecha.split('-'))
+                    if 1 <= month <= 12 and 1 <= day <= 31:  # Validación muy básica
+                        return fecha
+            except ValueError:
+                pass
+            print("❌ Formato de fecha inválido. Use YYYY-MM-DD (ej: 2023-12-31)")
+        
     def _gestion_estudiantes(self):
            while True:
             print("\n=== GESTIÓN DE ESTUDIANTES ===")
@@ -110,45 +330,7 @@ class AdminUI:
         if self.operations.insertar_profesor(**datos):
             print("✅ Profesor registrado exitosamente")
 
-    def _gestion_cursos(self):
-        while True:
-            print("\n=== GESTIÓN DE CURSOS ===")
-            print("1. Listar cursos")
-            print("2. Agregar curso")
-            print("3. Volver")
-            
-            opcion = input("\nSeleccione una opción: ")
-            
-            if opcion == "1":
-                cursos = self.operations.listar_cursos()
-                if cursos:
-                    print(tabulate(cursos, headers="keys", tablefmt="pretty"))
-                else:
-                    print("No hay cursos registrados")
-            elif opcion == "2":
-                self._agregar_curso()
-            elif opcion == "3":
-                break
-            else:
-                print("Opción no válida")
 
-    def _agregar_curso(self):
-        print("\n=== NUEVO CURSO ===")
-        datos = {
-            'id_curso': input("ID: "),
-            'id_profesor': input("ID del profesor: "),
-            'nombre': input("Nombre del curso: "),
-            'id_categoria': input("ID de categoría: "),
-            'url_contenido': input("URL de contenido: "),
-            'periodo': input("Periodo (1/2): "),
-            'precio': input("Precio: "),
-            'año': input("Año: "),
-            'fecha_inicio': input("Fecha inicio (YYYY-MM-DD): "),
-            'fecha_fin': input("Fecha fin (YYYY-MM-DD): ")
-        }
-        
-        if self.operations.insertar_curso(**datos):
-            print("✅ Curso registrado exitosamente")
 
     def _reportes(self):
         while True:
@@ -175,3 +357,4 @@ class AdminUI:
             if genero in ['M', 'F']:
                 return genero
             print("❌ Debe ser M o F")
+    
