@@ -212,7 +212,7 @@ class EstudianteUI:
                 ver_respuestas = input("\n¿Deseas ver todas las respuestas del foro? (s/n): ").lower().strip()
                 if ver_respuestas in ['s', 'si', 'sí', 'y', 'yes']:
                     print(f"\n=== RESPUESTAS DEL FORO ===")
-                    respuestas = self.operations.listar_respuestas_foro(id_foro)
+                    respuestas = self.operations.listar_respuestas_foro(id_foro, self.user['id_estudiante'])
                     if respuestas:
                         print(tabulate(respuestas, headers="keys", tablefmt="pretty"))
                     else:
