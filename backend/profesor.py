@@ -20,12 +20,12 @@ class ProfesorOperations:
         try:
             query = """
                 INSERT INTO asignacion_tarea (
-                    id_tarea, id_curso, id_profesor, nombre, 
+                    id_curso, id_profesor, nombre, 
                     desc_tarea, nombre_archivo, fecha_creacion_tarea, fecha_entrega_tarea
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             params = (
-                kwargs['id_tarea'], id_curso, id_profesor,
+                id_curso, id_profesor,
                 kwargs['nombre'], kwargs['descripcion'],
                 kwargs['archivo'], kwargs['fecha_creacion'],
                 kwargs['fecha_entrega']

@@ -70,8 +70,6 @@ class ProfesorUI:
                 return
                 
             tarea_data = {
-                'id_tarea': int(input("ID de la tarea: ")),
-                'id_curso': id_curso,
                 'nombre': input("Nombre de la tarea: "),
                 'descripcion': input("Descripción: "),
                 'archivo': input("Nombre del archivo: "),
@@ -79,15 +77,21 @@ class ProfesorUI:
                 'fecha_entrega': input("Fecha entrega (YYYY-MM-DD): ")
             }
             
-            if self.operations.publicar_tarea(self.user['id'], **tarea_data):
+            # Validación básica de fechas
+            if len(tarea_data['fecha_creacion']) != 10 or len(tarea_data['fecha_entrega']) != 10:
+                print("❌ El formato de fecha debe ser YYYY-MM-DD")
+                return
+                
+            # Llamada corregida - sin id_tarea
+            if self.operations.publicar_tarea(id_curso, self.user['id'], **tarea_data):
                 print("✅ Tarea publicada correctamente")
             else:
                 print("❌ No se pudo publicar la tarea")
                 
         except ValueError:
-            print("❌ Los IDs deben ser números")
+            print("❌ El ID del curso debe ser un número")
         except Exception as e:
-            print(f"❌ Error inesperado: {e}")
+            print(f"❌ Error inesperado: {str(e)}")
 
     def _ver_tareas(self):
         cursos = self.operations.listar_cursos_profesor(self.user['id'])
