@@ -44,23 +44,23 @@ class ProfesorOperations:
         finally:
             self.db.close()
 
-    def publicar_material(self, id_curso, id_profesor, **kwargs):
+    def publicar_material(self, id_curso, **kwargs):
         try:
             query = """
                 INSERT INTO material (
-                    id_material, id_curso, id_profesor, 
-                    titulo, desc_material, nombre_archivo, fecha_public
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    id_curso, titulo, desc_material, 
+                    nombre_archivo, fecha_public
+                ) VALUES (%s, %s, %s, %s, %s)
             """
             params = (
-                kwargs['id_material'], id_curso, id_profesor,
+                id_curso,
                 kwargs['titulo'], kwargs['descripcion'],
                 kwargs['archivo'], kwargs['fecha_publicacion']
             )
             return self.db.execute_query(query, params)
         finally:
             self.db.close()
-
+            
     def listar_estudiantes_curso(self, id_curso):
         try:
             return self.db.execute_query("""
@@ -144,5 +144,33 @@ class ProfesorOperations:
                 kwargs['fecha_envio'], kwargs['id_mensaje_respuesta']
             )
             return self.db.execute_query(query, params)
+        finally:
+            self.db.close()
+            
+            
+    def listar_materiales_profesor(self, id_profesor):
+        try:
+            return self.db.execute_query("""
+                SELECT m.id_material, m.titulo, c.nombre AS nombre_curso, 
+                    m.fecha_public, m.nombre_archivo, m.desc_material
+                FROM material m
+                JOIN curso c ON m.id_curso = c.id_curso
+                JOIN asig_profecurso ap ON c.id_curso = ap.id_curso
+                WHERE ap.id_profesor = %s
+                ORDER BY m.fecha_public DESC
+            """, (id_profesor,))
+        finally:
+            self.db.close()
+
+    def listar_materiales_curso(self, id_curso):
+        try:
+            return self.db.execute_query("""
+                SELECT m.id_material, m.titulo, m.fecha_public, 
+                    m.nombre_archivo, m.desc_material, c.nombre AS nombre_curso
+                FROM material m
+                JOIN curso c ON m.id_curso = c.id_curso
+                WHERE m.id_curso = %s
+                ORDER BY m.fecha_public DESC
+            """, (id_curso,))
         finally:
             self.db.close()

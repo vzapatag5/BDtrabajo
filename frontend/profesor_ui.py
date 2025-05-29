@@ -285,14 +285,14 @@ class ProfesorUI:
             if opcion == "1":
                 self._publicar_material()
             elif opcion == "2":
-                print("Función en desarrollo")
+                self._ver_mis_materiales()
             elif opcion == "3":
                 break
             else:
                 print("Opción no válida")
 
     def _publicar_material(self):
-        print("\n=== NUEVO MATERIAL ===")
+        print("\n=== PUBLICAR NUEVO MATERIAL ===")
         cursos = self.operations.listar_cursos_profesor(self.user['id'])
         
         if not cursos:
@@ -300,20 +300,86 @@ class ProfesorUI:
             return
             
         print("\nTus cursos:")
-        print(tabulate(cursos, headers="keys", tablefmt="pretty"))
+        print(tabulate(
+            [(c['id_curso'], c['nombre']) for c in cursos],
+            headers=['ID', 'Nombre del Curso'],
+            tablefmt='grid'
+        ))
         
-        id_curso = input("\nID del curso para el material: ")
+        try:
+            id_curso = int(input("\nID del curso para el material: "))
+            if not any(c['id_curso'] == id_curso for c in cursos):
+                print("❌ No estás asignado a este curso")
+                return
+            
+            material_data = {
+                'titulo': input("Título del material: "),
+                'descripcion': input("Descripción: "),
+                'archivo': input("Nombre del archivo (ej: guia.pdf): "),
+                'fecha_publicacion': datetime.now().strftime('%Y-%m-%d')
+            }
+            
+            if self.operations.publicar_material(id_curso, **material_data):
+                print("✅ Material publicado exitosamente")
+            else:
+                print("❌ Error al publicar el material")
+                
+        except ValueError:
+            print("❌ El ID del curso debe ser un número")
+        except Exception as e:
+            print(f"❌ Error inesperado: {str(e)}")
+            
+    def _ver_mis_materiales(self):
+        print("\n=== MIS MATERIALES PUBLICADOS ===")
+        materiales = self.operations.listar_materiales_profesor(self.user['id'])
         
-        datos = {
-            'id_material': input("ID del material: "),
-            'titulo': input("Título: "),
-            'descripcion': input("Descripción: "),
-            'archivo': input("Nombre del archivo: "),
-            'fecha_publicacion': input("Fecha publicación (YYYY-MM-DD): ")
-        }
-        
-        if self.operations.publicar_material(id_curso, self.user['id'], **datos):
-            print("✅ Material publicado exitosamente")
+        if materiales:
+            print(tabulate(
+                [(m['id_material'], m['titulo'], m['nombre_curso'], 
+                m['fecha_public'], m['nombre_archivo'], m['desc_material']) 
+                for m in materiales],
+                headers=['ID', 'Título', 'Curso', 'Fecha', 'Archivo', 'Descripción'],
+                tablefmt='grid'
+            ))
+        else:
+            print("No has publicado ningún material")
+
+        def _ver_materiales_curso(self):
+            cursos = self.operations.listar_cursos_profesor(self.user['id'])
+            
+            if not cursos:
+                print("No tienes cursos asignados")
+                return
+                
+            print("\nTus cursos:")
+            print(tabulate(
+                [(c['id_curso'], c['nombre']) for c in cursos],
+                headers=['ID', 'Nombre del Curso'],
+                tablefmt='grid'
+            ))
+            
+            try:
+                id_curso = int(input("\nID del curso para ver materiales: "))
+                if not any(c['id_curso'] == id_curso for c in cursos):
+                    print("❌ No estás asignado a este curso")
+                    return
+                    
+                materiales = self.operations.listar_materiales_curso(id_curso)
+                
+                if materiales:
+                    print("\nMateriales del curso:")
+                    print(tabulate(
+                        [(m['id_material'], m['titulo'], m['fecha_public'], 
+                        m['nombre_archivo'], m['desc_material']) 
+                        for m in materiales],
+                        headers=['ID', 'Título', 'Fecha', 'Archivo', 'Descripción'],
+                        tablefmt='grid'
+                    ))
+                else:
+                    print("Este curso no tiene materiales publicados")
+                    
+            except ValueError:
+                print("❌ El ID del curso debe ser un número")
 
     def _mis_cursos(self):
         cursos = self.operations.listar_cursos_profesor(self.user['id'])
