@@ -72,3 +72,77 @@ class ProfesorOperations:
             """, (id_curso,))
         finally:
             self.db.close()
+            
+    def crear_foro(self, id_curso, id_profesor, **kwargs):
+        try:
+            query = """
+                INSERT INTO creacion_foro (
+                    nombre, id_profesor, id_curso, 
+                    desc_foro, fecha_creacion_foro, fecha_termin_foro
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            params = (
+                kwargs['nombre'], id_profesor, id_curso,
+                kwargs['descripcion'], kwargs['fecha_creacion'],
+                kwargs['fecha_termino']
+            )
+            return self.db.execute_query(query, params)
+        finally:
+            self.db.close()
+
+    def listar_foros_profesor(self, id_profesor):
+        try:
+            return self.db.execute_query("""
+                SELECT f.id_foro, f.nombre, c.nombre AS nombre_curso, 
+                       f.fecha_creacion_foro, f.fecha_termin_foro
+                FROM creacion_foro f
+                JOIN curso c ON f.id_curso = c.id_curso
+                WHERE f.id_profesor = %s
+                ORDER BY f.fecha_creacion_foro DESC
+            """, (id_profesor,))
+        finally:
+            self.db.close()
+
+    def listar_foros_disponibles(self, id_profesor):
+        try:
+            return self.db.execute_query("""
+                SELECT f.id_foro, f.nombre, c.nombre AS nombre_curso
+                FROM creacion_foro f
+                JOIN curso c ON f.id_curso = c.id_curso
+                WHERE c.id_profesor = %s OR f.id_profesor = %s
+                ORDER BY f.fecha_creacion_foro DESC
+            """, (id_profesor, id_profesor))
+        finally:
+            self.db.close()
+
+    def listar_mensajes_foro(self, id_foro):
+        try:
+            return self.db.execute_query("""
+                SELECT m.id_mensaje, m.nombre, m.desc_msj_foro, m.fecha_envio, 
+                       m.id_mensaje_respuesta, p.nombre AS nombre_profesor, 
+                       e.nombre AS nombre_estudiante
+                FROM mensaje_foro m
+                LEFT JOIN profesor p ON m.id_profesor = p.id_profesor
+                LEFT JOIN estudiante e ON m.id_estudiante = e.id_estudiante
+                WHERE m.id_foro = %s
+                ORDER BY m.fecha_envio ASC
+            """, (id_foro,))
+        finally:
+            self.db.close()
+
+    def publicar_mensaje_foro(self, id_foro, id_profesor, **kwargs):
+        try:
+            query = """
+                INSERT INTO mensaje_foro (
+                    id_profesor, id_foro, nombre, 
+                    desc_msj_foro, fecha_envio, id_mensaje_respuesta
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            params = (
+                id_profesor, id_foro,
+                kwargs['nombre'], kwargs['descripcion'],
+                kwargs['fecha_envio'], kwargs['id_mensaje_respuesta']
+            )
+            return self.db.execute_query(query, params)
+        finally:
+            self.db.close()
