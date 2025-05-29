@@ -37,8 +37,7 @@ class AdminUI:
             print("1. Listar cursos")
             print("2. Agregar curso")
             print("3. Asignar estudiantes a curso")
-            print("4. Ver estudiantes por curso")
-            print("5. Volver")
+            print("4. Volver")
             
             opcion = input("\nSeleccione una opción: ")
             
@@ -49,8 +48,6 @@ class AdminUI:
             elif opcion == "3":
                 self._asignar_estudiantes_curso()
             elif opcion == "4":
-                self._ver_estudiantes_curso()
-            elif opcion == "5":
                 break
             else:
                 print("Opción no válida")
@@ -157,7 +154,7 @@ class AdminUI:
         finally:
             input("\nPresione Enter para volver al menú...")
 
-    def _ver_estudiantes_curso(self):
+    """def _ver_estudiantes_curso(self):
         print("\n=== ESTUDIANTES POR CURSO ===")
         
         cursos = self.operations.listar_cursos()
@@ -189,7 +186,7 @@ class AdminUI:
         except ValueError:
             print("❌ El ID del curso debe ser un número")
         except Exception as e:
-            print(f"❌ Error inesperado: {str(e)}")
+            print(f"❌ Error inesperado: {str(e)}")"""
             
     def _agregar_curso(self):
         print("\n=== NUEVO CURSO ===")
