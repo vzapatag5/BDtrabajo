@@ -147,12 +147,30 @@ class ProfesorUI:
             if opcion == "1":
                 self._ver_mensajes_foro(id_foro)
             elif opcion == "2":
-                self._publicar_mensaje_foro(id_foro, None)
+                self._publicar_mensaje_foro(id_foro, None)  # None indica que no es respuesta
             elif opcion == "3":
+                # Primero mostrar los mensajes disponibles
                 self._ver_mensajes_foro(id_foro)
-                id_respuesta = input("ID del mensaje al que responder (Enter para cancelar): ")
-                if id_respuesta:
-                    self._publicar_mensaje_foro(id_foro, int(id_respuesta))
+                
+                # Validar que haya mensajes a los que responder
+                mensajes = self.operations.listar_mensajes_foro(id_foro)
+                if not mensajes:
+                    print("No hay mensajes a los que responder en este foro")
+                    return
+                    
+                try:
+                    id_respuesta = int(input("\nID del mensaje al que responder (0 para cancelar): "))
+                    if id_respuesta == 0:
+                        return
+                        
+                    # Verificar que el mensaje al que se responde existe
+                    if not any(m['id_mensaje'] == id_respuesta for m in mensajes):
+                        print("❌ El ID del mensaje no existe en este foro")
+                        return
+                        
+                    self._publicar_mensaje_foro(id_foro, id_respuesta)
+                except ValueError:
+                    print("❌ Debes ingresar un número válido")
             else:
                 print("Opción no válida")
                 
@@ -160,7 +178,6 @@ class ProfesorUI:
             print("❌ El ID debe ser un número")
         except Exception as e:
             print(f"❌ Error inesperado: {str(e)}")
-
     def _ver_mensajes_foro(self, id_foro):
         mensajes = self.operations.listar_mensajes_foro(id_foro)
         
@@ -182,8 +199,11 @@ class ProfesorUI:
             'nombre': input("Título del mensaje: "),
             'descripcion': input("Contenido del mensaje: "),
             'fecha_envio': datetime.now().strftime('%Y-%m-%d'),
-            'id_mensaje_respuesta': id_respuesta
+            'id_mensaje_respuesta': id_respuesta if id_respuesta else None  # Asegurar None si es 0
         }
+        
+        # Debug: Mostrar datos que se enviarán
+        print(f"\nDatos a enviar: {mensaje_data}")
         
         if self.operations.publicar_mensaje_foro(id_foro, self.user['id'], **mensaje_data):
             print("✅ Mensaje publicado correctamente")

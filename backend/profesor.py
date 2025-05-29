@@ -132,22 +132,32 @@ class ProfesorOperations:
 
     def publicar_mensaje_foro(self, id_foro, id_profesor, **kwargs):
         try:
+            # Primero, obtener el siguiente ID disponible
+            max_id_query = "SELECT COALESCE(MAX(id_mensaje), 0) + 1 as next_id FROM mensaje_foro"
+            result = self.db.execute_query(max_id_query)
+            next_id = result[0]['next_id'] if result and len(result) > 0 else 1
+            
+            print(f"Siguiente ID a usar: {next_id}")  # Debug
+            
             query = """
                 INSERT INTO mensaje_foro (
-                    id_profesor, id_foro, nombre, 
+                    id_mensaje, id_profesor, id_foro, nombre, 
                     desc_msj_foro, fecha_envio, id_mensaje_respuesta
-                ) VALUES (%s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             params = (
+                next_id,  # Agregar el ID generado
                 id_profesor, id_foro,
                 kwargs['nombre'], kwargs['descripcion'],
-                kwargs['fecha_envio'], kwargs['id_mensaje_respuesta']
+                kwargs['fecha_envio'], kwargs.get('id_mensaje_respuesta')
             )
             return self.db.execute_query(query, params)
+        except Exception as e:
+            print(f"Error en BD: {str(e)}")
+            return False
         finally:
             self.db.close()
-            
-            
+        
     def listar_materiales_profesor(self, id_profesor):
         try:
             return self.db.execute_query("""
