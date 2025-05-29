@@ -56,70 +56,106 @@ class AdminUI:
                 print("Opción no válida")
                 
     def _listar_cursos(self):
-        cursos = self.operations.listar_cursos()
-        if cursos:
-            print("\n=== LISTADO DE CURSOS ===")
+        try:
+            cursos = self.operations.listar_cursos()
+            if not cursos:
+                print("No hay cursos registrados")
+                return
+
+            print("\n=== LISTADO COMPLETO DE CURSOS ===")
             print(tabulate(
-                [(c['id_curso'], c['nombre_curso'], c['profesor'], 
-                c['categoria'], c['fecha_inicio'], c['fecha_fin'], 
-                f"${c['precio']:,}") 
-                for c in cursos],
-                headers=['ID', 'Nombre', 'Profesor', 'Categoría', 'Inicio', 'Fin', 'Precio'],
+                [
+                    (
+                        c['id_curso'],
+                        c.get('nombre_curso', 'Sin nombre'),
+                        c.get('nombre_profesor', 'Sin profesor'),
+                        c.get('nombre_categoria', 'Sin categoría'),
+                        c.get('fecha_inicio', 'Sin fecha'),
+                        c.get('fecha_fin', 'Sin fecha'),
+                        f"${c.get('precio', 0):,}"
+                    )
+                    for c in cursos
+                ],
+                headers=[
+                    'ID', 'Curso', 'Profesor', 
+                    'Categoría', 'Inicio', 'Fin', 'Precio'
+                ],
                 tablefmt='grid'
             ))
-        else:
-            print("No hay cursos registrados")
+        except Exception as e:
+            print(f"❌ Error al cargar los cursos: {str(e)}")
+        finally:
+            input("\nPresione Enter para continuar...")
 
     def _asignar_estudiantes_curso(self):
         print("\n=== ASIGNAR ESTUDIANTES A CURSO ===")
         
         try:
-            # Usar el método correcto para listar cursos
-            cursos = self.operations.listar_cursos()  # Método existente
+            # Obtener lista de cursos con nombres consistentes
+            cursos = self.operations.listar_cursos()
             if not cursos:
-                print("No hay cursos registrados")
+                print("No hay cursos disponibles para asignación")
                 return
-                
+
             print("\nCursos disponibles:")
             print(tabulate(
-                [(c['id_curso'], c['nombre']) for c in cursos],
-                headers=['ID', 'Nombre del Curso'],
+                [
+                    (c['id_curso'], 
+                    c.get('nombre_curso', 'Sin nombre'),  # Usamos get() con valor por defecto
+                    c.get('nombre_profesor', 'Sin profesor'),
+                    c.get('nombre_categoria', 'Sin categoría'))
+                    for c in cursos
+                ],
+                headers=['ID', 'Nombre del Curso', 'Profesor', 'Categoría'],
                 tablefmt='grid'
             ))
-            
-            id_curso = int(input("\nID del curso para asignar estudiantes: "))
+
+            id_curso = int(input("\nIngrese el ID del curso: "))
             
             # Verificar que el curso existe
-            if not any(c['id_curso'] == id_curso for c in cursos):
-                print("❌ El ID del curso no existe")
+            curso_seleccionado = next((c for c in cursos if c['id_curso'] == id_curso), None)
+            if not curso_seleccionado:
+                print("❌ Error: El ID del curso no existe")
                 return
-                
-            # Listar estudiantes no matriculados
+
+            # Obtener estudiantes no matriculados
             estudiantes = self.operations.listar_estudiantes_no_matriculados(id_curso)
             if not estudiantes:
                 print("Todos los estudiantes ya están matriculados en este curso")
                 return
-                
+
             print("\nEstudiantes disponibles para asignar:")
             print(tabulate(
-                [(e['id_estudiante'], e['nombre']) for e in estudiantes],
-                headers=['ID', 'Nombre'],
+                [
+                    (e['id_estudiante'], 
+                    e.get('nombre_estudiante', 'Sin nombre'), 
+                    e.get('email', 'Sin email'))
+                    for e in estudiantes
+                ],
+                headers=['ID', 'Nombre del Estudiante', 'Email'],
                 tablefmt='grid'
             ))
+
+            id_estudiante = int(input("\nIngrese el ID del estudiante: "))
             
-            id_estudiante = int(input("\nID del estudiante a asignar: "))
-            
+            # Verificar que el estudiante existe
+            estudiante_seleccionado = next((e for e in estudiantes if e['id_estudiante'] == id_estudiante), None)
+            if not estudiante_seleccionado:
+                print("❌ Error: El ID del estudiante no es válido")
+                return
+
+            # Asignar estudiante al curso
             if self.operations.asignar_estudiante_curso(id_estudiante, id_curso):
-                print("✅ Estudiante asignado correctamente al curso")
+                print(f"\n✅ Estudiante {estudiante_seleccionado.get('nombre_estudiante', '')} asignado exitosamente al curso {curso_seleccionado.get('nombre_curso', '')}")
             else:
-                print("❌ Error al asignar el estudiante al curso")
-                
+                print("❌ No se pudo completar la asignación")
+
         except ValueError:
             print("❌ Error: Debe ingresar un número válido para los IDs")
         except Exception as e:
             print(f"❌ Error inesperado: {str(e)}")
         finally:
-            input("Presione Enter para continuar...")
+            input("\nPresione Enter para volver al menú...")
 
     def _ver_estudiantes_curso(self):
         print("\n=== ESTUDIANTES POR CURSO ===")

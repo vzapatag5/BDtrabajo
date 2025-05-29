@@ -57,21 +57,46 @@ class AdminOperations:
             self.db.close()
             
     def listar_estudiantes_curso(self, id_curso):
+            try:
+                return self.db.execute_query("""
+                    SELECT e.id_estudiante, e.nombre, e.email
+                    FROM estudiante e
+                    JOIN pago p ON e.id_estudiante = p.id_estudiante
+                    JOIN matricula m ON p.id_pago = m.id_pago
+                    WHERE m.id_curso = %s
+                """, (id_curso,))
+            finally:
+                self.db.close()
+
+    def listar_cursos(self):
         try:
             return self.db.execute_query("""
-                SELECT e.id_estudiante, e.nombre, e.email
-                FROM estudiante e
-                JOIN pago p ON e.id_estudiante = p.id_estudiante
-                JOIN matricula m ON p.id_pago = m.id_pago
-                WHERE m.id_curso = %s
-            """, (id_curso,))
+                SELECT 
+                    c.id_curso, 
+                    c.nombre AS nombre_curso,
+                    p.nombre AS nombre_profesor,  # Alias explícito
+                    cat.nombre AS nombre_categoria,
+                    c.fecha_inicio,
+                    c.fecha_fin,
+                    c.precio
+                FROM curso c
+                JOIN profesor p ON c.id_profesor = p.id_profesor
+                JOIN categoria cat ON c.id_categoria = cat.id_categoria
+                ORDER BY c.fecha_inicio DESC
+            """)
+        except Exception as e:
+            print(f"Error en la consulta: {str(e)}")
+            return []
         finally:
             self.db.close()
 
     def listar_estudiantes_no_matriculados(self, id_curso):
         try:
             return self.db.execute_query("""
-                SELECT e.id_estudiante, e.nombre, e.email
+                SELECT 
+                    e.id_estudiante, 
+                    e.nombre AS nombre_estudiante,  # Alias consistente
+                    e.email
                 FROM estudiante e
                 WHERE e.id_estudiante NOT IN (
                     SELECT p.id_estudiante
@@ -79,56 +104,11 @@ class AdminOperations:
                     JOIN matricula m ON p.id_pago = m.id_pago
                     WHERE m.id_curso = %s
                 )
+                ORDER BY e.nombre
             """, (id_curso,))
         finally:
             self.db.close()
-
-    def asignar_estudiante_curso(self, id_estudiante, id_curso):
-        try:
-            # Verificar si ya está matriculado
-            existe = self.db.execute_query("""
-                SELECT 1 FROM matricula m
-                JOIN pago p ON m.id_pago = p.id_pago
-                WHERE p.id_estudiante = %s AND m.id_curso = %s
-            """, (id_estudiante, id_curso))
-            
-            if existe:
-                return False
-                
-            # Crear registro de pago (simplificado)
-            query_pago = """
-                INSERT INTO pago (id_estudiante, valor_pago, comprobante)
-                VALUES (%s, 0, 'MATRICULA-ADMIN')
-                RETURNING id_pago
-            """
-            id_pago = self.db.execute_query(query_pago, (id_estudiante,), fetch_one=True)
-            
-            if id_pago:
-                # Crear matrícula
-                query_matricula = """
-                    INSERT INTO matricula (id_pago, id_curso, fecha_matricula, semestre, año)
-                    VALUES (%s, %s, CURRENT_DATE, 1, EXTRACT(YEAR FROM CURRENT_DATE))
-                """
-                return self.db.execute_query(query_matricula, (id_pago['id_pago'], id_curso))
-            
-            return False
-        finally:
-            self.db.close()
-            
-    def listar_cursos(self):
-        try:
-            return self.db.execute_query("""
-                SELECT c.id_curso, c.nombre AS nombre_curso, 
-                    p.nombre AS profesor, cat.nombre AS categoria,
-                    c.fecha_inicio, c.fecha_fin, c.precio
-                FROM curso c
-                JOIN profesor p ON c.id_profesor = p.id_profesor
-                JOIN categoria cat ON c.id_categoria = cat.id_categoria
-                ORDER BY c.fecha_inicio DESC
-            """)
-        finally:
-            self.db.close()  
-            
+        
     def listar_profesores(self):
         try:
             return self.db.execute_query("""
@@ -180,5 +160,35 @@ class AdminOperations:
                 JOIN categoria cat ON c.id_categoria = cat.id_categoria
                 ORDER BY c.nombre
             """)
+        finally:
+            self.db.close()
+            
+    def asignar_estudiante_curso(self, id_estudiante, id_curso):
+        try:
+            # 1. Verificar matrícula existente
+            matriculado = self.db.execute_query("""
+                SELECT 1 FROM matricula m
+                JOIN pago p ON m.id_pago = p.id_pago
+                WHERE p.id_estudiante = %s AND m.id_curso = %s
+            """, (id_estudiante, id_curso))
+            
+            if matriculado:
+                return False
+
+            # 2. Crear pago y matrícula en una sola transacción
+            return self.db.execute_query("""
+                BEGIN;
+                INSERT INTO pago (id_estudiante, valor_pago, comprobante)
+                VALUES (%s, 0, 'MATRICULA-ADMIN');
+                
+                INSERT INTO matricula (id_pago, id_curso, fecha_matricula, semestre, año)
+                VALUES (LAST_INSERT_ID(), %s, CURRENT_DATE, 1, YEAR(CURRENT_DATE));
+                COMMIT;
+            """, (id_estudiante, id_curso))
+            
+        except Exception as e:
+            print(f"Error en BD: {str(e)}")
+            self.db.execute_query("ROLLBACK;")
+            return False
         finally:
             self.db.close()
