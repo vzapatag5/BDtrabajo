@@ -178,20 +178,31 @@ class AdminOperations:
             if matriculado:
                 return False
 
-            # 2. Crear pago y matrícula en una sola transacción
-            return self.db.execute_query("""
-                BEGIN;
-                INSERT INTO pago (id_estudiante, valor_pago, comprobante)
-                VALUES (%s, 0, 'MATRICULA-ADMIN');
-                
-                INSERT INTO matricula (id_pago, id_curso, fecha_matricula, semestre, año)
-                VALUES (LAST_INSERT_ID(), %s, CURRENT_DATE, 1, YEAR(CURRENT_DATE));
-                COMMIT;
-            """, (id_estudiante, id_curso))
+            # 2. Iniciar transacción
+            self.db.start_transaction()
+            
+            # 3. Crear pago y obtener ID
+            pago_id = self.db.execute_query(
+                """INSERT INTO pago (id_estudiante, valor_pago, comprobante)
+                VALUES (%s, 0, 'MATRICULA-ADMIN')""",
+                (id_estudiante,),
+                return_lastrowid=True
+            )
+            
+            # 4. Crear matrícula
+            self.db.execute_query(
+                """INSERT INTO matricula (id_pago, id_curso, fecha_matricula, semestre, año)
+                VALUES (%s, %s, CURRENT_DATE, 1, YEAR(CURRENT_DATE))""",
+                (pago_id, id_curso)
+            )
+            
+            # 5. Confirmar transacción
+            self.db.commit()
+            return True
             
         except Exception as e:
             print(f"Error en BD: {str(e)}")
-            self.db.execute_query("ROLLBACK;")
+            self.db.rollback()
             return False
         finally:
             self.db.close()
@@ -204,5 +215,20 @@ class AdminOperations:
                 FROM profesor
                 WHERE id_profesor = %s
             """, (id_profesor,))
+        finally:
+            self.db.close()
+
+    def obtener_ultimo_curso_creado(self):
+        try:
+            resultados = self.db.execute_query("""
+                SELECT c.id_curso, c.nombre AS nombre_curso
+                FROM curso c
+                ORDER BY c.id_curso DESC
+                LIMIT 1
+            """)
+            return resultados[0] if resultados else None
+        except Exception as e:
+            print(f"Error al obtener último curso: {str(e)}")
+            return None
         finally:
             self.db.close()

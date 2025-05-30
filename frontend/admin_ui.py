@@ -247,14 +247,14 @@ class AdminUI:
             if self.operations.insertar_curso(**datos):
                 print("✅ Curso registrado exitosamente")
                 # Mostrar el curso recién creado
-                nuevos_cursos = self.operations.listar_cursos()
-                if nuevos_cursos:
-                    print("\nCurso creado:")
-                    print(tabulate(
-                        [(c['id_curso'], c['nombre_curso']) for c in nuevos_cursos[:1]],
-                        headers=['ID', 'Nombre'],
-                        tablefmt='grid'
-                    ))
+                nuevo_curso = self.operations.obtener_ultimo_curso_creado()
+            if nuevo_curso:
+                print("\nCurso creado:")
+                print(tabulate(
+                    [(nuevo_curso['id_curso'], nuevo_curso['nombre_curso'])],
+                    headers=['ID', 'Nombre'],
+                    tablefmt='grid'
+                ))
             else:
                 print("❌ Error al registrar el curso")
                 

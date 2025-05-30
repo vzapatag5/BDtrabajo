@@ -12,8 +12,8 @@ class Database:
             self.connection = pymysql.connect(
                 host="localhost",
                 user="root",
-                port=3306,
-                password="",
+                port=3307,
+                password="Fito123",
                 database="sistema_nodo",
                 cursorclass=DictCursor,
                 autocommit=False
@@ -34,10 +34,9 @@ class Database:
         except:
             return False
 
-    def execute_query(self, query, args=None):
+    def execute_query(self, query, args=None, fetch_one=False, return_lastrowid=False):
         """Ejecuta una consulta SQL con manejo robusto de errores"""
         try:
-            # Verificar y reconectar si es necesario
             if not self.is_connected():
                 print("⚠️ Reconectando a la base de datos...")
                 if not self._connect():
@@ -45,10 +44,17 @@ class Database:
 
             with self.connection.cursor() as cursor:
                 cursor.execute(query, args or ())
-                if query.strip().upper().startswith('SELECT'):
-                    return cursor.fetchall()
-                self.connection.commit()
-                return True
+                
+                if return_lastrowid:
+                    result = cursor.lastrowid
+                elif query.strip().upper().startswith('SELECT'):
+                    result = cursor.fetchone() if fetch_one else cursor.fetchall()
+                else:
+                    result = True
+                
+                # No hacemos commit automático para manejar transacciones explícitas
+                return result
+                
         except OperationalError as e:
             print(f"❌ Error de conexión: {e}")
             self.connection = None
@@ -58,6 +64,21 @@ class Database:
             if self.connection:
                 self.connection.rollback()
             return None
+
+    def start_transaction(self):
+        """Inicia una transacción explícita"""
+        if self.is_connected():
+            self.connection.begin()
+
+    def commit(self):
+        """Confirma una transacción"""
+        if self.is_connected():
+            self.connection.commit()
+
+    def rollback(self):
+        """Revierte una transacción"""
+        if self.is_connected():
+            self.connection.rollback()
 
     def close(self):
         """Cierra la conexión de manera segura"""
