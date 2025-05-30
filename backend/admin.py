@@ -74,18 +74,18 @@ class AdminOperations:
                 SELECT 
                     c.id_curso, 
                     c.nombre AS nombre_curso,
-                    p.nombre AS nombre_profesor,  # Alias explícito
+                    p.nombre AS nombre_profesor,
                     cat.nombre AS nombre_categoria,
                     c.fecha_inicio,
                     c.fecha_fin,
                     c.precio,
-                    c.url_contenido,  # Añadido
-                    c.periodo,        # Añadido
-                    c.año             # Añadido
+                    c.url_contenido,
+                    c.periodo,
+                    c.año
                 FROM curso c
                 JOIN profesor p ON c.id_profesor = p.id_profesor
                 JOIN categoria cat ON c.id_categoria = cat.id_categoria
-                ORDER BY c.fecha_inicio DESC
+                ORDER BY c.id_curso DESC  # Cambiado a ordenar por ID descendente
             """)
         except Exception as e:
             print(f"Error en la consulta: {str(e)}")
@@ -148,7 +148,14 @@ class AdminOperations:
                 kwargs['periodo'], kwargs['precio'], kwargs['año'],
                 kwargs['fecha_inicio'], kwargs['fecha_fin']
             )
-            return self.db.execute_query(query, params)
+            resultado = self.db.execute_query(query, params)
+
+            if resultado:
+                self.db.commit()  # ← AGREGAR ESTA LÍNEA
+                return True
+            else:
+                self.db.rollback()
+                return False
         finally:
             self.db.close()
             
@@ -168,20 +175,35 @@ class AdminOperations:
             
     def asignar_estudiante_curso(self, id_estudiante, id_curso):
         try:
-            # 1. Verificar matrícula existente
+            # 1. Verificar que el estudiante y curso existen
+            estudiante = self.db.execute_query(
+                "SELECT 1 FROM estudiante WHERE id_estudiante = %s", 
+                (id_estudiante,),
+                fetch_one=True
+            )
+            curso = self.db.execute_query(
+                "SELECT 1 FROM curso WHERE id_curso = %s", 
+                (id_curso,),
+                fetch_one=True
+            )
+            
+            if not estudiante or not curso:
+                return False
+
+            # 2. Verificar matrícula existente
             matriculado = self.db.execute_query("""
                 SELECT 1 FROM matricula m
                 JOIN pago p ON m.id_pago = p.id_pago
                 WHERE p.id_estudiante = %s AND m.id_curso = %s
-            """, (id_estudiante, id_curso))
+            """, (id_estudiante, id_curso), fetch_one=True)
             
             if matriculado:
                 return False
 
-            # 2. Iniciar transacción
+            # 3. Iniciar transacción
             self.db.start_transaction()
             
-            # 3. Crear pago y obtener ID
+            # 4. Crear pago y obtener ID
             pago_id = self.db.execute_query(
                 """INSERT INTO pago (id_estudiante, valor_pago, comprobante)
                 VALUES (%s, 0, 'MATRICULA-ADMIN')""",
@@ -189,14 +211,20 @@ class AdminOperations:
                 return_lastrowid=True
             )
             
-            # 4. Crear matrícula
-            self.db.execute_query(
+            if not pago_id:
+                raise Exception("No se pudo crear el pago")
+            
+            # 5. Crear matrícula
+            resultado = self.db.execute_query(
                 """INSERT INTO matricula (id_pago, id_curso, fecha_matricula, semestre, año)
                 VALUES (%s, %s, CURRENT_DATE, 1, YEAR(CURRENT_DATE))""",
                 (pago_id, id_curso)
             )
             
-            # 5. Confirmar transacción
+            if not resultado:
+                raise Exception("No se pudo crear la matrícula")
+            
+            # 6. Confirmar transacción
             self.db.commit()
             return True
             

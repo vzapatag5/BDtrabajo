@@ -50,7 +50,7 @@ class Database:
                 elif query.strip().upper().startswith('SELECT'):
                     result = cursor.fetchone() if fetch_one else cursor.fetchall()
                 else:
-                    result = True
+                    result = cursor.rowcount > 0
                 
                 # No hacemos commit automático para manejar transacciones explícitas
                 return result

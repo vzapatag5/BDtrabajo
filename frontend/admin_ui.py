@@ -192,26 +192,28 @@ class AdminUI:
         print("\n=== NUEVO CURSO ===")
         
         try:
-            # Mostrar profesores disponibles (usando operations en lugar de db)
+            # 1. Mostrar profesores disponibles primero
             profesores = self.operations.listar_profesores()
             if not profesores:
                 print("No hay profesores registrados. Debe registrar profesores primero.")
+                input("\nPresione Enter para volver...")
                 return
             
             print("\nProfesores disponibles:")
             print(tabulate(
                 [(p['id_profesor'], p['nombre'], 
-                p.get('area_principal', 'N/A'),  # Usamos .get() para manejar campos faltantes
+                p.get('area_principal', 'N/A'),
                 p.get('email', '')) 
                 for p in profesores],
                 headers=['ID', 'Nombre', 'Área Principal', 'Email'],
                 tablefmt='grid'
             ))
             
-            # Mostrar categorías disponibles (también usando operations)
+            # 2. Mostrar categorías disponibles
             categorias = self.operations.listar_categorias()
             if not categorias:
                 print("No hay categorías registradas. Debe registrar categorías primero.")
+                input("\nPresione Enter para volver...")
                 return
             
             print("\nCategorías disponibles:")
@@ -221,7 +223,7 @@ class AdminUI:
                 tablefmt='grid'
             ))
             
-            # Resto del código para recolectar datos del curso...
+            # 3. Recolectar datos del curso después de mostrar las tablas
             datos = {
                 'id_profesor': int(input("\nID del profesor: ")),
                 'nombre': input("Nombre del curso: ").strip(),
@@ -237,24 +239,27 @@ class AdminUI:
             # Validar que el profesor existe
             if not any(p['id_profesor'] == datos['id_profesor'] for p in profesores):
                 print("❌ El ID del profesor no existe")
+                input("\nPresione Enter para volver...")
                 return
                 
             # Validar que la categoría existe
             if not any(c['id_categoria'] == datos['id_categoria'] for c in categorias):
                 print("❌ El ID de categoría no existe")
+                input("\nPresione Enter para volver...")
                 return
                 
+            # Insertar curso
             if self.operations.insertar_curso(**datos):
-                print("✅ Curso registrado exitosamente")
+                print("\n✅ Curso registrado exitosamente")
                 # Mostrar el curso recién creado
                 nuevo_curso = self.operations.obtener_ultimo_curso_creado()
-            if nuevo_curso:
-                print("\nCurso creado:")
-                print(tabulate(
-                    [(nuevo_curso['id_curso'], nuevo_curso['nombre_curso'])],
-                    headers=['ID', 'Nombre'],
-                    tablefmt='grid'
-                ))
+                if nuevo_curso:
+                    print("\nCurso creado:")
+                    print(tabulate(
+                        [(nuevo_curso['id_curso'], nuevo_curso['nombre_curso'])],
+                        headers=['ID', 'Nombre'],
+                        tablefmt='grid'
+                    ))
             else:
                 print("❌ Error al registrar el curso")
                 
@@ -262,6 +267,8 @@ class AdminUI:
             print(f"❌ Error en los datos ingresados: {str(e)}")
         except Exception as e:
             print(f"❌ Error inesperado: {str(e)}")
+        finally:
+            input("\nPresione Enter para volver al menú...")
             
             
     def _validar_periodo(self):
