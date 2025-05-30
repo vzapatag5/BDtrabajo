@@ -21,7 +21,20 @@ class AdminOperations:
                 kwargs['id_estudiante'], kwargs['id_nodo'], kwargs['nombre'],
                 kwargs['email'], kwargs['genero'], kwargs['contrasena']
             )
-            return self.db.execute_query(query, params)
+            resultado = self.db.execute_query(query, params)
+
+            if resultado:
+                self.db.commit()
+                return True
+            else:
+                self.db.rollback()
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error al insertar estudiante: {str(e)}")
+            self.db.rollback()
+            return False
+
         finally:
             self.db.close()
 
@@ -38,7 +51,20 @@ class AdminOperations:
                 kwargs['genero'], kwargs['area_principal'], 
                 kwargs.get('area_alternativa', ''), kwargs['contrasena']
             )
-            return self.db.execute_query(query, params)
+            resultado = self.db.execute_query(query, params)
+
+            if resultado:
+                self.db.commit()
+                return True
+            else:
+                self.db.rollback()
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error al insertar profesor: {str(e)}")
+            self.db.rollback()
+            return False
+
         finally:
             self.db.close()
 
