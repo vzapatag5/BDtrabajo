@@ -1,4 +1,4 @@
-# info de la materia: <codigo-mat> <nombre-mat>
+# info de la materia: <S2561-0701> <Bases de datos>
 #
 # Estudiante(s): 
 # Mariana Carrasquilla, mcarrasqub@eafit.edu.co
