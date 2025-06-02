@@ -17,7 +17,9 @@ class ProfesorOperations:
             self.db.close()
 
     def publicar_tarea(self, id_curso, id_profesor, **kwargs):
+        db = Database()  # Nueva instancia
         try:
+            db.start_transaction()
             query = """
                 INSERT INTO asignacion_tarea (
                     id_curso, id_profesor, nombre, 
@@ -30,14 +32,26 @@ class ProfesorOperations:
                 kwargs['archivo'], kwargs['fecha_creacion'],
                 kwargs['fecha_entrega']
             )
-            return self.db.execute_query(query, params)
+            result = db.execute_query(query, params)
+            
+            if result:
+                db.commit()
+                return True
+            else:
+                db.rollback()
+                return False
+                
+        except Exception as e:
+            print(f"Error en publicar_tarea: {e}")
+            db.rollback()
+            return False
         finally:
-            self.db.close()
+            db.close()
 
     def listar_tareas_curso(self, id_curso):
         try:
             return self.db.execute_query("""
-                SELECT id_tarea, nombre, fecha_entrega_tarea
+                SELECT id_tarea, nombre, desc_tarea, fecha_entrega_tarea
                 FROM asignacion_tarea
                 WHERE id_curso = %s
             """, (id_curso,))
@@ -45,7 +59,9 @@ class ProfesorOperations:
             self.db.close()
 
     def publicar_material(self, id_curso, **kwargs):
+        db = Database()  # Nueva instancia
         try:
+            db.start_transaction()
             query = """
                 INSERT INTO material (
                     id_curso, titulo, desc_material, 
@@ -57,9 +73,23 @@ class ProfesorOperations:
                 kwargs['titulo'], kwargs['descripcion'],
                 kwargs['archivo'], kwargs['fecha_publicacion']
             )
-            return self.db.execute_query(query, params)
+            result = db.execute_query(query, params)
+            
+            if result:
+                db.commit()
+                print("✅ Material insertado y transacción confirmada")  # Debug
+                return True
+            else:
+                db.rollback()
+                print("❌ Error al insertar material - transacción revertida")  # Debug
+                return False
+                
+        except Exception as e:
+            print(f"Error en publicar_material: {e}")
+            db.rollback()
+            return False
         finally:
-            self.db.close()
+            db.close()
             
     def listar_estudiantes_curso(self, id_curso):
         try:
@@ -74,7 +104,9 @@ class ProfesorOperations:
             self.db.close()
             
     def crear_foro(self, id_curso, id_profesor, **kwargs):
+        db = Database()  # Nueva instancia
         try:
+            db.start_transaction()
             query = """
                 INSERT INTO creacion_foro (
                     nombre, id_profesor, id_curso, 
@@ -86,9 +118,21 @@ class ProfesorOperations:
                 kwargs['descripcion'], kwargs['fecha_creacion'],
                 kwargs['fecha_termino']
             )
-            return self.db.execute_query(query, params)
+            result = db.execute_query(query, params)
+            
+            if result:
+                db.commit()
+                return True
+            else:
+                db.rollback()
+                return False
+                
+        except Exception as e:
+            print(f"Error en crear_foro: {e}")
+            db.rollback()
+            return False
         finally:
-            self.db.close()
+            db.close()
 
     def listar_foros_profesor(self, id_profesor):
         try:
@@ -131,10 +175,13 @@ class ProfesorOperations:
             self.db.close()
 
     def publicar_mensaje_foro(self, id_foro, id_profesor, **kwargs):
+        db = Database()  # Nueva instancia
         try:
+            db.start_transaction()
+            
             # Primero, obtener el siguiente ID disponible
             max_id_query = "SELECT COALESCE(MAX(id_mensaje), 0) + 1 as next_id FROM mensaje_foro"
-            result = self.db.execute_query(max_id_query)
+            result = db.execute_query(max_id_query)
             next_id = result[0]['next_id'] if result and len(result) > 0 else 1
             
             print(f"Siguiente ID a usar: {next_id}")  # Debug
@@ -151,22 +198,32 @@ class ProfesorOperations:
                 kwargs['nombre'], kwargs['descripcion'],
                 kwargs['fecha_envio'], kwargs.get('id_mensaje_respuesta')
             )
-            return self.db.execute_query(query, params)
+            
+            result = db.execute_query(query, params)
+            
+            if result:
+                db.commit()
+                return True
+            else:
+                db.rollback()
+                return False
+                
         except Exception as e:
-            print(f"Error en BD: {str(e)}")
+            print(f"Error en publicar_mensaje_foro: {str(e)}")
+            db.rollback()
             return False
         finally:
-            self.db.close()
+            db.close()
         
     def listar_materiales_profesor(self, id_profesor):
         try:
+            # Query corregida - usar directamente la relación con curso
             return self.db.execute_query("""
                 SELECT m.id_material, m.titulo, c.nombre AS nombre_curso, 
                     m.fecha_public, m.nombre_archivo, m.desc_material
                 FROM material m
                 JOIN curso c ON m.id_curso = c.id_curso
-                JOIN asig_profecurso ap ON c.id_curso = ap.id_curso
-                WHERE ap.id_profesor = %s
+                WHERE c.id_profesor = %s
                 ORDER BY m.fecha_public DESC
             """, (id_profesor,))
         finally:

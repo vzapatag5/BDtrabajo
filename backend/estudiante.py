@@ -5,16 +5,22 @@ class EstudianteOperations:
         self.db = Database()
 
     def listar_tareas_estudiante(self, id_estudiante):
+        """Lista tareas del estudiante - SOLO LECTURA"""
         try:
             return self.db.execute_query("""
-                SELECT at.nombre FROM asignacion_tarea AS at INNER JOIN entrega_tarea e ON at.id_tarea = e.id_tarea INNER JOIN estudiante AS es ON 
-                e.id_estudiante = es.id_estudiante WHERE es.id_estudiante = %s
+                SELECT at.nombre FROM asignacion_tarea AS at 
+                INNER JOIN entrega_tarea e ON at.id_tarea = e.id_tarea 
+                INNER JOIN estudiante AS es ON e.id_estudiante = es.id_estudiante 
+                WHERE es.id_estudiante = %s
             """, (id_estudiante,))
+        except Exception as e:
+            print(f"❌ Error al listar tareas: {e}")
+            return []
         finally:
             self.db.close()
 
     def descargar_material(self, id_material, id_estudiante):
-        """Descarga material solo si pertenece a un curso del estudiante"""
+        """Descarga material solo si pertenece a un curso del estudiante - SOLO LECTURA"""
         try:
             if not str(id_material).isdigit():
                 print("❌ El ID debe ser un número")
@@ -45,7 +51,7 @@ class EstudianteOperations:
             self.db.close()
         
     def listar_respuestas_foro(self, id_foro, id_estudiante):
-        """Lista respuestas solo si el estudiante está matriculado en el curso del foro"""
+        """Lista respuestas solo si el estudiante está matriculado en el curso del foro - SOLO LECTURA"""
         try:
             return self.db.execute_query("""
                 SELECT 
@@ -75,45 +81,64 @@ class EstudianteOperations:
             self.db.close()
 
     def responder_foro(self, id_foro, id_estudiante, mensaje):
-        """Envía una respuesta al foro con validación de acceso"""
+        """Envía una respuesta al foro con validación de acceso - ESCRITURA CON TRANSACCIÓN"""
+        db_transaccion = None
         try:
+            # Usar una nueva conexión para la transacción completa
+            db_transaccion = Database()
+            
             # Verificar acceso primero
-            acceso, msg = self.verificar_participacion_foro(id_foro, id_estudiante)
+            acceso, msg = self._verificar_participacion_foro_interno(db_transaccion, id_foro, id_estudiante)
             if not acceso:
                 print(f"❌ {msg}")
                 return False
 
+            # Iniciar transacción
+            db_transaccion.start_transaction()
+
             # Obtener siguiente ID
-            next_id = self._obtener_siguiente_id_mensaje()
+            next_id = self._obtener_siguiente_id_mensaje_interno(db_transaccion)
             if not next_id:
+                db_transaccion.rollback()
                 return False
 
-            # Insertar mensaje
-            estudiante_info = self.db.execute_query(
+            # Obtener información del estudiante
+            estudiante_info = db_transaccion.execute_query(
                 "SELECT nombre FROM estudiante WHERE id_estudiante = %s", 
                 (id_estudiante,)
             )
             nombre_autor = estudiante_info[0]['nombre'] if estudiante_info else f"Estudiante {id_estudiante}"
 
-            self.db.execute_query("""
+            # Insertar mensaje
+            resultado = db_transaccion.execute_query("""
                 INSERT INTO mensaje_foro (
                     id_mensaje, id_estudiante, id_foro, 
                     nombre, desc_msj_foro, fecha_envio
                 ) VALUES (%s, %s, %s, %s, %s, NOW())
             """, (next_id, id_estudiante, id_foro, nombre_autor, mensaje))
 
-            return True
+            if resultado:
+                # Confirmar transacción
+                db_transaccion.commit()
+                print("✅ Transacción confirmada")
+                return True
+            else:
+                db_transaccion.rollback()
+                return False
+
         except Exception as e:
             print(f"❌ Error al responder: {str(e)}")
+            if db_transaccion:
+                db_transaccion.rollback()
             return False
         finally:
-            self.db.close()
+            if db_transaccion:
+                db_transaccion.close()
 
     def _obtener_siguiente_id_mensaje(self):
-        """Obtiene el siguiente ID disponible de manera segura"""
-        db_temp = Database()  # Crear una conexión temporal
+        """Método público que mantiene compatibilidad - SOLO LECTURA"""
         try:
-            result = db_temp.execute_query("""
+            result = self.db.execute_query("""
                 SELECT IFNULL(MAX(id_mensaje), 0) + 1 AS next_id 
                 FROM mensaje_foro
             """)
@@ -121,15 +146,52 @@ class EstudianteOperations:
             if result and len(result) > 0:
                 return result[0]['next_id']
             else:
-                return 1  # Si no hay mensajes, empezar con ID 1
+                return 1
                 
         except Exception as e:
             print(f"❌ Error al obtener siguiente ID: {e}")
             return None
         finally:
-            db_temp.close()
+            self.db.close()
+
+    def _obtener_siguiente_id_mensaje_interno(self, db_connection):
+        """Método interno para usar dentro de transacciones"""
+        try:
+            result = db_connection.execute_query("""
+                SELECT IFNULL(MAX(id_mensaje), 0) + 1 AS next_id 
+                FROM mensaje_foro
+            """)
+            
+            if result and len(result) > 0:
+                return result[0]['next_id']
+            else:
+                return 1
+                
+        except Exception as e:
+            print(f"❌ Error al obtener siguiente ID: {e}")
+            return None
+
+    def _verificar_participacion_foro_interno(self, db_connection, id_foro, id_estudiante):
+        """Método interno para verificar participación dentro de transacciones"""
+        try:
+            resultado = db_connection.execute_query("""
+                SELECT cf.id_foro
+                FROM creacion_foro cf
+                JOIN curso c ON cf.id_curso = c.id_curso
+                JOIN matricula mat ON c.id_curso = mat.id_curso
+                JOIN pago p ON mat.id_pago = p.id_pago
+                WHERE cf.id_foro = %s
+                AND p.id_estudiante = %s
+                AND cf.fecha_termin_foro >= CURDATE()
+                LIMIT 1
+            """, (id_foro, id_estudiante))
+            
+            return bool(resultado), "Foro disponible" if resultado else "No tienes acceso a este foro"
+        except Exception as e:
+            return False, f"Error de verificación: {str(e)}"
             
     def listar_materiales(self):
+        """Lista todos los materiales - SOLO LECTURA"""
         try:
             return self.db.execute_query("""
                 SELECT id_material, titulo 
@@ -143,7 +205,7 @@ class EstudianteOperations:
             self.db.close()
 
     def listar_materiales_estudiante(self, id_estudiante):
-        """Lista materiales solo de los cursos del estudiante"""
+        """Lista materiales solo de los cursos del estudiante - SOLO LECTURA"""
         try:
             return self.db.execute_query("""
                 SELECT m.id_material, m.titulo 
@@ -161,7 +223,7 @@ class EstudianteOperations:
             self.db.close()
         
     def listar_foros_disponibles(self, id_estudiante):
-        """Lista solo los foros activos a los que el estudiante pertenece"""
+        """Lista solo los foros activos a los que el estudiante pertenece - SOLO LECTURA"""
         try:
             # Verificar primero si la tabla existe
             table_exists = self.db.execute_query("""
@@ -195,7 +257,7 @@ class EstudianteOperations:
             self.db.close()
 
     def verificar_participacion_foro(self, id_foro, id_estudiante):
-        """Verifica si el estudiante puede participar en el foro"""
+        """Verifica si el estudiante puede participar en el foro - SOLO LECTURA"""
         try:
             resultado = self.db.execute_query("""
                 SELECT cf.id_foro
