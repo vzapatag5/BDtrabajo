@@ -11,7 +11,7 @@
 # Sistema Académico - Gestión de Cursos, Estudiantes y Profesores
 #
 # 1. breve descripción de la actividad
-# El sistema académico es una aplicación de consola desarrollada en Python que permite gestionar cursos, estudiantes y profesores en una institución educativa. El sistema ofrece diferentes funcionalidades según el rol del usuario (administrador, profesor o estudiante), incluyendo gestión de cursos, materiales, foros y tareas.
+#
 
 ## 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
