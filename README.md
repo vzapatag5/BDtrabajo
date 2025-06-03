@@ -89,7 +89,7 @@ autocommit=False
 
 │   ├── admin.py       # Interfaz gráfica admin
 
-│   ├── profesor.py    # Interfaz gráfica admin
+│   ├── profesor.py    # Interfaz gráfica profesor
 
 │   ├── main_ui.py     # main frontend
 
@@ -98,16 +98,16 @@ autocommit=False
 ## 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 #
 ### a) IP o nombres de dominio en nube o en la máquina servidor.
-localhost:3306 (dependiendo de la configuracion de MYSQL de cada computador)
+localhost:3307 (dependiendo de la configuracion de MYSQL de cada computador)
 #
-### b) Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+### b) Descripción y como se configura los parámetros del proyecto (ej: conexión a bases de datos, variables de ambiente, parámetros, etc)
  se ejecuta por consola con el comando python main.py, base de datos sistema_nodo.sql, y está dividido en 2 partes: backend y frontend.
  #
 ### c) Guía de usuario:
 
 * Instalar MySQL (WORKBENCH o XAMPP si es local).
 
-* Crear la base de datos sistema_nodo.
+* Montar la base de datos sistema_nodo.
 
 * Configurar el archivo db.py con sus credenciales.
 
