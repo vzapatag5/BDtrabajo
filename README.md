@@ -29,7 +29,7 @@ No se realizó una interfaz gráfica como originalmente se propuso y se mantuvo 
 #
 ## 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
-Bases de datos: cerradas cada que se hace una transacción se cierra la base de datos.
+Bases de datos cerradas: cada que se hace una transacción se cierra la base de datos.
 
 * Validación de datos antes de inserción en la base de datos.
 
