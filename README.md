@@ -29,63 +29,83 @@ No se realizó una interfaz gráfica como originalmente se propuso y se mantuvo 
 #
 ## 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
-bases de datos cerradas cada que se hace uan transaccion se cierra la bd
+Bases de datos cerradas cada que se hace una transacción se cierra la base de datos.
+
+* Validación de datos antes de inserción en la base de datos.
+
+* Separación de roles y permisos.
+
+* Código modularizado por funcionalidades.
 #
 ## 3. Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 
-## como se compila y ejecuta.
+### como se compila y ejecuta.
  se compila desde consola ejecutando desde el archivo main.py
 ### detalles del desarrollo.
  el lenguaje utilizado fue Python, y el motor de base de datos sistema_nodo es MYSQL con el software XAMPP
 ### detalles técnicos
  
 ### descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
-## opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
+### opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
 
 # .
 ├── main.py            # Punto de entrada de la aplicación
-├── README.md          # Documentación del proyecto           
+
+├── README.md          # Documentación del proyecto 
+
 ├── backend/           # Lógica de negocio y acceso a datos
+
 │   ├── auth.py        # Autenticación de usuarios
+
 │   ├── admin.py       # backend admin
+
 │   ├── profesor.py    # backend profesor
+
 │   ├── db.py          # Conexión a la base de datos
+
 │   └── estudiante.py  # backend estudiante
+
 └── frontend/          # Interfaz de usuario
+
 │   ├── admin.py       # Interfaz gráfica admin
+
 │   ├── profesor.py    # Interfaz gráfica admin
+
 │   ├── main_ui.py     # main frontend
+
 │   └── estudiante.py  # Interfaz gráfica estudiante
 ## opcionalmente - si quiere mostrar resultados o pantallazos 
-
+#
 ## 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
-
-## IP o nombres de dominio en nube o en la máquina servidor.
+#
+### IP o nombres de dominio en nube o en la máquina servidor.
 localhost:3306 (dependiendo de la configuracion de MYSQL de cada computador)
-
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+#
+### descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
  se ejecuta por consola con el comando python main.py, base de datos sistema_nodo.sql, y está dividido en 2 partes: backend y frontend.
-## como se lanza el servidor.
+ #
+### como se lanza el servidor.
  ejecuto main.py
-## una mini guia de como un usuario utilizaría el software o la aplicación
-Guía de usuario:
+ #
+### Guía de usuario:
 
-Instalar MySQL (o XAMPP si es local).
+* Instalar MySQL (o XAMPP si es local).
 
-Crear la base de datos sistema_nodo.
+* Crear la base de datos sistema_nodo.
 
-Configurar el archivo db.py con sus credenciales.
+* Configurar el archivo db.py con sus credenciales.
 
-Ejecutar python main.py (el sistema detectará automáticamente la configuración).
-Iniciar la aplicación
+* Ejecutar python main.py (el sistema detectará automáticamente la configuración).
 
-Ingresar con username y password
+* Iniciar la aplicación.
 
-Navegar por los menús según su rol
+* Ingresar al sistema con username y password.
 
-Seleccionar opciones numéricas para realizar acciones
+* Navegar por los menús según su rol.
 
-Seguir las instrucciones en pantalla para cada operación
+* Seleccionar opciones numéricas para realizar acciones.
+
+* Seguir las instrucciones en pantalla para cada operación.
 
 ## opcionalmente - si quiere mostrar resultados o pantallazos 
 
