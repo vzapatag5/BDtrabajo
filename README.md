@@ -13,7 +13,7 @@
 ## 1. breve descripción de la actividad
 Implementación de sistema académico para la plataforma NODO de la Universidad EAFIT, que permite la creación y administración de cursos, matricular estudiantes, gestión de usuarios, publicación de materiales y tareas, así como también la participación activa en foros, ofreciendo diferentes funcionalidades según el rol (profesor, admin, estudiante).
 #
-## 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+### 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
 Se cumplió con el desarrollo delmodelo Entidad-Relación, modelo relacional normalizado, la implementación física en MySQL, consultas SQL variadas y una aplicación en python donde se evidencia:
 
@@ -29,7 +29,7 @@ No se realizó una interfaz gráfica como originalmente se propuso y se mantuvo 
 #
 ## 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
-Bases de datos cerradas cada que se hace una transacción se cierra la base de datos.
+Bases de datos: cerradas cada que se hace una transacción se cierra la base de datos.
 
 * Validación de datos antes de inserción en la base de datos.
 
@@ -39,16 +39,36 @@ Bases de datos cerradas cada que se hace una transacción se cierra la base de d
 #
 ## 3. Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 
-### como se compila y ejecuta.
- se compila desde consola ejecutando desde el archivo main.py
-### detalles del desarrollo.
- el lenguaje utilizado fue Python, y el motor de base de datos sistema_nodo es MYSQL con el software XAMPP
-### detalles técnicos
- 
-### descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
-### opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
+### a) ¿Como se compila y ejecuta?
+Asegurese de tener Python 3.8+ instalado:
+```bash
+python --version 
+```
+Asegurese de instalar en VS Code las siguientes librerías:
+```bash
+pip install pymysql tabulate
+```
+ Se compila desde consola ejecutando desde el archivo main.py.
+ #
+### b) Detalles del desarrollo
+ el lenguaje utilizado fue Python, y el motor de base de datos sistema_nodo es MYSQL con el software XAMPP o WORKBENCH.
 
-# .
+#
+### Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+Asegurese de poner la información de su conexión correctamente en db.py en la parte:
+```bash
+host="localhost",
+user="root",
+port=3307, # revisar su puerto
+password="", #ponga su contraseña si la tiene
+database="sistema_nodo",
+cursorclass=DictCursor,
+autocommit=False
+```
+#
+### Detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
+
+# 
 ├── main.py            # Punto de entrada de la aplicación
 
 ├── README.md          # Documentación del proyecto 
@@ -74,22 +94,18 @@ Bases de datos cerradas cada que se hace una transacción se cierra la base de d
 │   ├── main_ui.py     # main frontend
 
 │   └── estudiante.py  # Interfaz gráfica estudiante
-## opcionalmente - si quiere mostrar resultados o pantallazos 
 #
 ## 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 #
-### IP o nombres de dominio en nube o en la máquina servidor.
+### a) IP o nombres de dominio en nube o en la máquina servidor.
 localhost:3306 (dependiendo de la configuracion de MYSQL de cada computador)
 #
-### descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+### b) Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
  se ejecuta por consola con el comando python main.py, base de datos sistema_nodo.sql, y está dividido en 2 partes: backend y frontend.
  #
-### como se lanza el servidor.
- ejecuto main.py
- #
-### Guía de usuario:
+### c) Guía de usuario:
 
-* Instalar MySQL (o XAMPP si es local).
+* Instalar MySQL (WORKBENCH o XAMPP si es local).
 
 * Crear la base de datos sistema_nodo.
 
@@ -106,13 +122,11 @@ localhost:3306 (dependiendo de la configuracion de MYSQL de cada computador)
 * Seleccionar opciones numéricas para realizar acciones.
 
 * Seguir las instrucciones en pantalla para cada operación.
-
-## opcionalmente - si quiere mostrar resultados o pantallazos 
-
-# 5. otra información que considere relevante para esta actividad.
+#
+## 5. otra información que considere relevante para esta actividad.
 El sistema fue desarrollado como proyecto final para el curso de Bases de Datos, implementando los conceptos aprendidos sobre diseño de bases de datos relacionales y programación con Python.
-# referencias:
-<debemos siempre reconocer los créditos de partes del código que reutilizaremos, así como referencias a youtube, o referencias bibliográficas utilizadas para desarrollar el proyecto o la actividad>
+#
+## referencias:
 ## sitio1-https://www.geeksforgeeks.org/login-and-registration-project-using-flask-and-mysql/ 
 ## sitio2-https://www.freecodecamp.org/news/connect-python-with-sql/ 
-## url de donde tomo info para desarrollar este proyecto
+## sitio3-https://pymysql.readthedocs.io/
