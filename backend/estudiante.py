@@ -5,7 +5,7 @@ class EstudianteOperations:
         self.db = Database()
 
     def listar_tareas_estudiante(self, id_estudiante):
-        """Lista tareas del estudiante - SOLO LECTURA"""
+        #lista las tareas asignadas al estudiante
         try:
             return self.db.execute_query("""
                 SELECT at.nombre FROM asignacion_tarea AS at 
@@ -20,7 +20,7 @@ class EstudianteOperations:
             self.db.close()
 
     def descargar_material(self, id_material, id_estudiante):
-        """Descarga material solo si pertenece a un curso del estudiante - SOLO LECTURA"""
+        # Descarga un material específico si el estudiante tiene acceso
         try:
             if not str(id_material).isdigit():
                 print("❌ El ID debe ser un número")
@@ -51,7 +51,7 @@ class EstudianteOperations:
             self.db.close()
         
     def listar_respuestas_foro(self, id_foro, id_estudiante):
-        """Lista respuestas solo si el estudiante está matriculado en el curso del foro - SOLO LECTURA"""
+        # Lista las respuestas de un foro específico al que el estudiante tiene acceso
         try:
             return self.db.execute_query("""
                 SELECT 
@@ -81,35 +81,28 @@ class EstudianteOperations:
             self.db.close()
 
     def responder_foro(self, id_foro, id_estudiante, mensaje):
-        """Envía una respuesta al foro con validación de acceso - ESCRITURA CON TRANSACCIÓN"""
+        # Responde a un foro específico si el estudiante tiene acceso
         db_transaccion = None
         try:
-            # Usar una nueva conexión para la transacción completa
             db_transaccion = Database()
-            
-            # Verificar acceso primero
             acceso, msg = self._verificar_participacion_foro_interno(db_transaccion, id_foro, id_estudiante)
             if not acceso:
                 print(f"❌ {msg}")
                 return False
-
-            # Iniciar transacción
+            
             db_transaccion.start_transaction()
 
-            # Obtener siguiente ID
             next_id = self._obtener_siguiente_id_mensaje_interno(db_transaccion)
             if not next_id:
                 db_transaccion.rollback()
                 return False
 
-            # Obtener información del estudiante
             estudiante_info = db_transaccion.execute_query(
                 "SELECT nombre FROM estudiante WHERE id_estudiante = %s", 
                 (id_estudiante,)
             )
             nombre_autor = estudiante_info[0]['nombre'] if estudiante_info else f"Estudiante {id_estudiante}"
 
-            # Insertar mensaje
             resultado = db_transaccion.execute_query("""
                 INSERT INTO mensaje_foro (
                     id_mensaje, id_estudiante, id_foro, 
@@ -118,7 +111,6 @@ class EstudianteOperations:
             """, (next_id, id_estudiante, id_foro, nombre_autor, mensaje))
 
             if resultado:
-                # Confirmar transacción
                 db_transaccion.commit()
                 print("✅ Transacción confirmada")
                 return True
@@ -136,7 +128,7 @@ class EstudianteOperations:
                 db_transaccion.close()
 
     def _obtener_siguiente_id_mensaje(self):
-        """Método público que mantiene compatibilidad - SOLO LECTURA"""
+        # Obtiene el siguiente ID disponible para un nuevo mensaje en el foro
         try:
             result = self.db.execute_query("""
                 SELECT IFNULL(MAX(id_mensaje), 0) + 1 AS next_id 
@@ -155,7 +147,7 @@ class EstudianteOperations:
             self.db.close()
 
     def _obtener_siguiente_id_mensaje_interno(self, db_connection):
-        """Método interno para usar dentro de transacciones"""
+        # Obtiene el siguiente ID disponible para un nuevo mensaje en el foro dentro de una transacción
         try:
             result = db_connection.execute_query("""
                 SELECT IFNULL(MAX(id_mensaje), 0) + 1 AS next_id 
@@ -172,7 +164,7 @@ class EstudianteOperations:
             return None
 
     def _verificar_participacion_foro_interno(self, db_connection, id_foro, id_estudiante):
-        """Método interno para verificar participación dentro de transacciones"""
+        # Verifica si el estudiante tiene acceso a un foro específico dentro de una transacción
         try:
             resultado = db_connection.execute_query("""
                 SELECT cf.id_foro
@@ -191,7 +183,7 @@ class EstudianteOperations:
             return False, f"Error de verificación: {str(e)}"
             
     def listar_materiales(self):
-        """Lista todos los materiales - SOLO LECTURA"""
+        # Lista todos los materiales disponibles en la base de datos
         try:
             return self.db.execute_query("""
                 SELECT id_material, titulo 
@@ -205,7 +197,7 @@ class EstudianteOperations:
             self.db.close()
 
     def listar_materiales_estudiante(self, id_estudiante):
-        """Lista materiales solo de los cursos del estudiante - SOLO LECTURA"""
+        # Lista los materiales a los que un estudiante tiene acceso
         try:
             return self.db.execute_query("""
                 SELECT m.id_material, m.titulo 
@@ -223,9 +215,8 @@ class EstudianteOperations:
             self.db.close()
         
     def listar_foros_disponibles(self, id_estudiante):
-        """Lista solo los foros activos a los que el estudiante pertenece - SOLO LECTURA"""
+        # Lista los foros activos a los que un estudiante tiene acceso
         try:
-            # Verificar primero si la tabla existe
             table_exists = self.db.execute_query("""
                 SELECT COUNT(*) AS existe 
                 FROM information_schema.tables 
@@ -257,7 +248,7 @@ class EstudianteOperations:
             self.db.close()
 
     def verificar_participacion_foro(self, id_foro, id_estudiante):
-        """Verifica si el estudiante puede participar en el foro - SOLO LECTURA"""
+        # Verifica si el estudiante tiene acceso a un foro específico
         try:
             resultado = self.db.execute_query("""
                 SELECT cf.id_foro

@@ -17,7 +17,7 @@ class AuthService:
             # Estudiante
             estudiante = self._authenticate("estudiante", "id_estudiante", email, password, "estudiante")
             if estudiante:
-                estudiante["id_estudiante"] = estudiante["id"]  # Compatibilidad
+                estudiante["id_estudiante"] = estudiante["id"] 
                 return estudiante
                 
             print("⚠️ Usuario no encontrado o credenciales incorrectas")

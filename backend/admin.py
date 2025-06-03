@@ -177,7 +177,7 @@ class AdminOperations:
             resultado = self.db.execute_query(query, params)
 
             if resultado:
-                self.db.commit()  # ← AGREGAR ESTA LÍNEA
+                self.db.commit()  
                 return True
             else:
                 self.db.rollback()

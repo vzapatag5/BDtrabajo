@@ -59,7 +59,7 @@ class EstudianteUI:
 
         try:
             id_material = input("\nIngrese el ID del material a descargar: ")
-            # Pasa el id_estudiante como segundo argumento
+            
             material = self.operations.descargar_material(id_material, self.user['id_estudiante'])
             
             if material:
@@ -94,9 +94,9 @@ class EstudianteUI:
                 print("Opción no válida")
 
     def _ver_respuestas_foro(self):
-        """Muestra respuestas de foros accesibles"""
+        
         try:
-            # Listar foros disponibles primero
+           
             foros = self.operations.listar_foros_disponibles(self.user['id_estudiante'])
             if not foros:
                 print("\n⚠️ No tienes acceso a ningún foro activo")
@@ -121,7 +121,7 @@ class EstudianteUI:
             print(f"❌ Error: {e}")
 
     def _responder_foro(self):
-        """Interfaz mejorada para responder en foros"""
+        
         print("\n=== RESPONDER EN FORO ===")
         
         try:

@@ -12,8 +12,8 @@ class Database:
             self.connection = pymysql.connect(
                 host="localhost",
                 user="root",
-                port=3307,
-                password="Fito123",
+                port=3307, #cambiar según la conexión
+                password="Fito123", #cambiar según la conexión
                 database="sistema_nodo",
                 cursorclass=DictCursor,
                 autocommit=False
@@ -25,7 +25,6 @@ class Database:
             return False
 
     def is_connected(self):
-        """Verifica si la conexión está activa"""
         try:
             if self.connection and self.connection.open:
                 self.connection.ping(reconnect=True)
@@ -35,7 +34,6 @@ class Database:
             return False
 
     def execute_query(self, query, args=None, fetch_one=False, return_lastrowid=False):
-        """Ejecuta una consulta SQL con manejo robusto de errores"""
         try:
             if not self.is_connected():
                 print("⚠️ Reconectando a la base de datos...")
@@ -51,8 +49,6 @@ class Database:
                     result = cursor.fetchone() if fetch_one else cursor.fetchall()
                 else:
                     result = cursor.rowcount > 0
-                
-                # No hacemos commit automático para manejar transacciones explícitas
                 return result
                 
         except OperationalError as e:
@@ -66,22 +62,18 @@ class Database:
             return None
 
     def start_transaction(self):
-        """Inicia una transacción explícita"""
         if self.is_connected():
             self.connection.begin()
 
     def commit(self):
-        """Confirma una transacción"""
         if self.is_connected():
             self.connection.commit()
 
     def rollback(self):
-        """Revierte una transacción"""
         if self.is_connected():
             self.connection.rollback()
 
     def close(self):
-        """Cierra la conexión de manera segura"""
         try:
             if self.connection and self.connection.open:
                 self.connection.close()

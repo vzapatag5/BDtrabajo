@@ -5,6 +5,7 @@ class ProfesorOperations:
         self.db = Database()
 
     def listar_cursos_profesor(self, id_profesor):
+        # Consulta para listar cursos del profesor
         try:
             query = """
                 SELECT c.id_curso, c.nombre, cat.nombre AS categoria
@@ -17,7 +18,7 @@ class ProfesorOperations:
             self.db.close()
 
     def publicar_tarea(self, id_curso, id_profesor, **kwargs):
-        db = Database()  # Nueva instancia
+        db = Database()  
         try:
             db.start_transaction()
             query = """
@@ -59,7 +60,7 @@ class ProfesorOperations:
             self.db.close()
 
     def publicar_material(self, id_curso, **kwargs):
-        db = Database()  # Nueva instancia
+        db = Database()  
         try:
             db.start_transaction()
             query = """
@@ -77,11 +78,11 @@ class ProfesorOperations:
             
             if result:
                 db.commit()
-                print("✅ Material insertado y transacción confirmada")  # Debug
+                print("✅ Material insertado y transacción confirmada")  
                 return True
             else:
                 db.rollback()
-                print("❌ Error al insertar material - transacción revertida")  # Debug
+                print("❌ Error al insertar material - transacción revertida")  
                 return False
                 
         except Exception as e:
@@ -92,6 +93,7 @@ class ProfesorOperations:
             db.close()
             
     def listar_estudiantes_curso(self, id_curso):
+        # Consulta para listar estudiantes inscritos en un curso
         try:
             return self.db.execute_query("""
                 SELECT e.id_estudiante, e.nombre, e.email
@@ -104,7 +106,8 @@ class ProfesorOperations:
             self.db.close()
             
     def crear_foro(self, id_curso, id_profesor, **kwargs):
-        db = Database()  # Nueva instancia
+        # Método para crear un foro asociado a un curso y profesor
+        db = Database()  
         try:
             db.start_transaction()
             query = """
@@ -135,6 +138,7 @@ class ProfesorOperations:
             db.close()
 
     def listar_foros_profesor(self, id_profesor):
+        # Método para listar foros creados por un profesor
         try:
             return self.db.execute_query("""
                 SELECT f.id_foro, f.nombre, c.nombre AS nombre_curso, 
@@ -148,6 +152,7 @@ class ProfesorOperations:
             self.db.close()
 
     def listar_foros_disponibles(self, id_profesor):
+        # Método para listar foros disponibles para un profesor
         try:
             return self.db.execute_query("""
                 SELECT f.id_foro, f.nombre, c.nombre AS nombre_curso
@@ -160,6 +165,7 @@ class ProfesorOperations:
             self.db.close()
 
     def listar_mensajes_foro(self, id_foro):
+        # Método para listar mensajes de un foro específico
         try:
             return self.db.execute_query("""
                 SELECT m.id_mensaje, m.nombre, m.desc_msj_foro, m.fecha_envio, 
@@ -175,6 +181,7 @@ class ProfesorOperations:
             self.db.close()
 
     def publicar_mensaje_foro(self, id_foro, id_profesor, **kwargs):
+        # Método para publicar un mensaje en un foro
         db = Database()  # Nueva instancia
         try:
             db.start_transaction()
@@ -216,6 +223,7 @@ class ProfesorOperations:
             db.close()
         
     def listar_materiales_profesor(self, id_profesor):
+        # Método para listar materiales publicados por un profesor
         try:
             # Query corregida - usar directamente la relación con curso
             return self.db.execute_query("""
@@ -230,6 +238,7 @@ class ProfesorOperations:
             self.db.close()
 
     def listar_materiales_curso(self, id_curso):
+        # Método para listar materiales de un curso específico
         try:
             return self.db.execute_query("""
                 SELECT m.id_material, m.titulo, m.fecha_public, 

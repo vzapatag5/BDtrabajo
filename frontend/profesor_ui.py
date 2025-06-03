@@ -36,8 +36,6 @@ class ProfesorUI:
             else:
                 print("Opción no válida")
 
-    # ... (mantén los métodos existentes como _gestion_tareas, _publicar_tarea, etc.)
-
     def _gestion_foros(self):
         while True:
             print("\n=== GESTIÓN DE FOROS ===")
@@ -119,7 +117,6 @@ class ProfesorUI:
     def _participar_en_foro(self):
         print("\n=== PARTICIPAR EN FORO ===")
         
-        # Mostrar foros de los cursos del profesor
         foros = self.operations.listar_foros_disponibles(self.user['id'])
         
         if not foros:
@@ -178,6 +175,7 @@ class ProfesorUI:
             print("❌ El ID debe ser un número")
         except Exception as e:
             print(f"❌ Error inesperado: {str(e)}")
+
     def _ver_mensajes_foro(self, id_foro):
         mensajes = self.operations.listar_mensajes_foro(id_foro)
         
@@ -263,7 +261,6 @@ class ProfesorUI:
                 print("❌ El formato de fecha debe ser YYYY-MM-DD")
                 return
                 
-            # Llamada corregida - sin id_tarea
             if self.operations.publicar_tarea(id_curso, self.user['id'], **tarea_data):
                 print("✅ Tarea publicada correctamente")
             else:
@@ -364,42 +361,42 @@ class ProfesorUI:
         else:
             print("No has publicado ningún material")
 
-        def _ver_materiales_curso(self):
-            cursos = self.operations.listar_cursos_profesor(self.user['id'])
+    def _ver_materiales_curso(self):
+        cursos = self.operations.listar_cursos_profesor(self.user['id'])
             
-            if not cursos:
-                print("No tienes cursos asignados")
+        if not cursos:
+            print("No tienes cursos asignados")
+            return
+                
+        print("\nTus cursos:")
+        print(tabulate(
+            [(c['id_curso'], c['nombre']) for c in cursos],
+            headers=['ID', 'Nombre del Curso'],
+            tablefmt='grid'
+        ))
+            
+        try:
+            id_curso = int(input("\nID del curso para ver materiales: "))
+            if not any(c['id_curso'] == id_curso for c in cursos):
+                print("❌ No estás asignado a este curso")
                 return
-                
-            print("\nTus cursos:")
-            print(tabulate(
-                [(c['id_curso'], c['nombre']) for c in cursos],
-                headers=['ID', 'Nombre del Curso'],
-                tablefmt='grid'
-            ))
-            
-            try:
-                id_curso = int(input("\nID del curso para ver materiales: "))
-                if not any(c['id_curso'] == id_curso for c in cursos):
-                    print("❌ No estás asignado a este curso")
-                    return
                     
-                materiales = self.operations.listar_materiales_curso(id_curso)
+            materiales = self.operations.listar_materiales_curso(id_curso)
                 
-                if materiales:
-                    print("\nMateriales del curso:")
-                    print(tabulate(
-                        [(m['id_material'], m['titulo'], m['fecha_public'], 
-                        m['nombre_archivo'], m['desc_material']) 
-                        for m in materiales],
-                        headers=['ID', 'Título', 'Fecha', 'Archivo', 'Descripción'],
-                        tablefmt='grid'
-                    ))
-                else:
-                    print("Este curso no tiene materiales publicados")
+            if materiales:
+                print("\nMateriales del curso:")
+                print(tabulate(
+                    [(m['id_material'], m['titulo'], m['fecha_public'], 
+                    m['nombre_archivo'], m['desc_material']) 
+                    for m in materiales],
+                    headers=['ID', 'Título', 'Fecha', 'Archivo', 'Descripción'],
+                    tablefmt='grid'
+                ))
+            else:
+                print("Este curso no tiene materiales publicados")
                     
-            except ValueError:
-                print("❌ El ID del curso debe ser un número")
+        except ValueError:
+            print("❌ El ID del curso debe ser un número")
 
     def _mis_cursos(self):
         cursos = self.operations.listar_cursos_profesor(self.user['id'])
