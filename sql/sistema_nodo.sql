@@ -131,9 +131,9 @@ CREATE TABLE `creacion_foro` (
 --
 
 INSERT INTO `creacion_foro` (`id_foro`, `nombre`, `id_profesor`, `id_curso`, `desc_foro`, `fecha_creacion_foro`, `fecha_termin_foro`) VALUES
-(1, 'Dudas generales', 102573365, 1, 'Espacio para preguntas', '2025-02-20', '2025-05-14'),
-(2, 'Tarea 1', 701763359, 2, 'Consultas sobre la tarea', '2025-02-22', '2025-05-14'),
-(3, 'Entrega 1', 700443790, 3, 'Inquietudes sobre trabajo', '2025-02-23', '2025-05-14');
+(1, 'Dudas generales', 102573365, 1, 'Espacio para preguntas', '2025-02-20', '2025-07-01'),
+(2, 'Tarea 1', 701763359, 2, 'Consultas sobre la tarea', '2025-02-22', '2025-07-01'),
+(3, 'Entrega 1', 700443790, 3, 'Inquietudes sobre trabajo', '2025-02-23', '2025-07-01');
 
 -- --------------------------------------------------------
 
@@ -159,9 +159,9 @@ CREATE TABLE `curso` (
 --
 
 INSERT INTO `curso` (`id_curso`, `id_profesor`, `nombre`, `id_categoria`, `url_contenido`, `periodo`, `precio`, `año`, `fecha_inicio`, `fecha_fin`) VALUES
-(1, 102573365, 'Bases de datos', 1, 'cursobd.com', 1, 500000, 2025, '2025-01-20', '2025-05-14'),
-(2, 701763359, 'Sistemas operativos', 1, 'curso1.com', 1, 750000, 2025, '2025-01-20', '2025-05-14'),
-(3, 700443790, 'Financieras', 2, 'cursomut.com', 1, 500000, 2025, '2025-01-20', '2025-05-14');
+(1, 102573365, 'Bases de datos', 1, 'cursobd.com', 1, 500000, 2025, '2025-01-20', '2025-07-01'),
+(2, 701763359, 'Sistemas operativos', 1, 'curso1.com', 1, 750000, 2025, '2025-01-20', '2025-07-01'),
+(3, 700443790, 'Financieras', 2, 'cursomut.com', 1, 500000, 2025, '2025-01-20', '2025-07-01');
 
 -- --------------------------------------------------------
 
