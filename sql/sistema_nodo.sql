@@ -293,7 +293,7 @@ INSERT INTO `matricula` (`id_matricula`, `id_pago`, `id_curso`, `fecha_matricula
 --
 
 CREATE TABLE `mensaje_foro` (
-  `id_mensaje` int(11) NOT NULL,
+  `id_mensaje` int(11) NOT NULL AUTO_INCREMENT,
   `id_estudiante` int(12) DEFAULT NULL,
   `id_profesor` int(12) DEFAULT NULL,
   `id_foro` int(11) NOT NULL,
